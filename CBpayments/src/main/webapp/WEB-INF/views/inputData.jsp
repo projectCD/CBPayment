@@ -18,6 +18,12 @@
 	<c:out value="${name}"></c:out>
 	<br>
 	<input type="button" value="get data json" onclick="searchAjax()">
+	<input type="button" value="get data json" onclick="searchAjaxTest()">
+	<input type="text" id="xmlName">
 	<table id="JSON_table"></table>
+	
+	QR碼
+	<c:out value="${url}"></c:out>
+	
 </body>
 </html>

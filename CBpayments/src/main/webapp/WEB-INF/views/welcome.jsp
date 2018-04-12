@@ -13,5 +13,22 @@
     <input type= "text"  name="name">
     <input type="submit">
     </form>
+    <form action="goGoogle" method="get">
+    <input type= "text"  name="name" value="togoogle">
+    <input type="submit">
+    </form>
+    
+    
+    	String mch_id = request.getParameter("mch_id");
+    	String service = request.getParameter("service");
+    	String body = request.getParameter("body");
+    
+     <form action="xmlSubmit" method="get">
+   	 mch_id<input type="text" name="mch_id" value="500581200000001"><br>
+   	 body<input type="text" name="body" value=""><br>
+   	 total_fee<input type="text" name="total_fee" value=""><br>
+    <input type="submit">
+    </form>
+
 </body>
 </html>

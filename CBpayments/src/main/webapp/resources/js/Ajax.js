@@ -27,3 +27,26 @@ function searchAjax() {
 			}
 		});
 	}
+
+
+function searchAjaxTest() {
+	var data =  $("#xmlName").val();
+	alert(data);
+
+	$.ajax({
+		type : "POST",
+		url : "http://posp.paycoming.com/onlinepay/gateway",
+		data : data,
+		dataType : "xml",
+		timeout : 100000,
+		success : function(data) {
+			console.log(data);
+		},
+		error : function(e) {
+			console.log("ERROR: ", e);
+		},
+		done : function(e) {
+			console.log("DONE");
+		}
+	});
+}
