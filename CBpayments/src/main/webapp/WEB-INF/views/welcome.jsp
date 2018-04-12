@@ -5,6 +5,10 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="<c:url value="resources/js/jquery.qrcode.js" />"></script>	
+<script src="<c:url value="resources/js/qrcode.js" />"></script>	
 <title>HelloWorld page</title>
 </head>
 <body>
@@ -18,10 +22,16 @@
     <input type="submit">
     </form>
     
+       
+   <div id="qrcodeTable"></div>
     
-    	String mch_id = request.getParameter("mch_id");
-    	String service = request.getParameter("service");
-    	String body = request.getParameter("body");
+    <script>
+    jQuery('#qrcodeTable').qrcode({
+		render	: "table",
+		text	: "http://weixin://wxpay/bizpayurl?pr=sJ5U8KB"
+	});	
+    </script>
+ 
     
      <form action="xmlSubmit" method="get">
    	 mch_id<input type="text" name="mch_id" value="500581200000001"><br>
