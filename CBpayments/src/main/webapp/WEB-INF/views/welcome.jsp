@@ -9,20 +9,10 @@
 	src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="<c:url value="resources/js/jquery.qrcode.js" />"></script>	
 <script src="<c:url value="resources/js/qrcode.js" />"></script>	
-<title>HelloWorld page</title>
+<title>CBPay</title>
 </head>
 <body>
-    Welcome to CBpayments
-    <form action="helloagain" method="get">
-    <input type= "text"  name="name">
-    <input type="submit">
-    </form>
-    <form action="goGoogle" method="get">
-    <input type= "text"  name="name" value="togoogle">
-    <input type="submit">
-    </form>
-    
-       
+    <!-- 
    <div id="qrcodeTable"></div>
     
     <script>
@@ -31,13 +21,29 @@
 		text	: "http://weixin://wxpay/bizpayurl?pr=sJ5U8KB"
 	});	
     </script>
+     -->   
  
     
-     <form action="xmlSubmit" method="get">
-   	 mch_id<input type="text" name="mch_id" value="500581200000001"><br>
-   	 body<input type="text" name="body" value=""><br>
-   	 total_fee<input type="text" name="total_fee" value=""><br>
-    <input type="submit">
+     <form action="genQRCode" method="POST">
+     <table>
+     	<tr>
+     		<td align="center">Account</td>
+     		<td><input type="text" name="mch_id" value="500581200000001"></td>
+     	</tr>
+     	<tr>
+     		<td align="center">Product description</td>
+     		<td><input type="text" name="body" value=""></td>
+     	</tr>
+     	<tr>
+     		<td align="center">Amount</td>
+     		<td><input type="text" name="total_fee" value=""></td>
+     	</tr>
+     	<tr>
+     		<td align="center">Currency</td>
+     		<td><input type="text" name="fee_type" value="USD" readonly="readonly" ></td>
+     	</tr>
+     </table>
+    <input type="submit" value="Generate QRCODE">
     </form>
 
 </body>
