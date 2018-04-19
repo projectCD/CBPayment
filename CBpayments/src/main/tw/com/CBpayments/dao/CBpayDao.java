@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Example;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
@@ -64,13 +65,12 @@ public class CBpayDao implements Serializable {
 
 	public List<CbCustomer> searchCustomer(CbCustomer cbCustomer) {
 		// TODO Auto-generated method stub
-		
-		return getSession().createCriteria(CbCustomer.class).list();
+		return getSession().createCriteria(CbCustomer.class).add(Example.create(cbCustomer)).list();
 	}
 
 	public List<CbTranDetails> searchTranDetail(CbTranDetails cbTranDetails) {
 		// TODO Auto-generated method stub
-		return getSession().createCriteria(CbTranDetails.class).list();
+		return getSession().createCriteria(CbTranDetails.class).add(Example.create(cbTranDetails)).list();
 	}
 
 }
