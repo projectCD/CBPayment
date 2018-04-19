@@ -52,6 +52,7 @@ public class WXPayConstants {
     public final static String WXPAY_KEY = "31313131313131313131313131313131";  //測試帳號的KEY
 	public final static String WXPAY_UTF8 = "UTF-8";  //測試帳號的KEY
 	public final static String WXPAY_URL_3126 = "http://posp.paycoming.com/onlinepay/gateway";
+	public final static String WXPAY_URL_3124 = "http://posp.paycoming.com/jlagent/tran-query";
 	public final static String WXPAY_CNY = "CNY";
 	public final static String WXPAY_SERVICE = "pay.wechat.smpay";
 }

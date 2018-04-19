@@ -24,6 +24,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -53,7 +54,7 @@ public class WXPayUtil {
             for (int idx = 0; idx < nodeList.getLength(); ++idx) {
                 Node node = nodeList.item(idx);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    org.w3c.dom.Element element = (org.w3c.dom.Element) node;
+                    Element element = (org.w3c.dom.Element) node;
                     data.put(element.getNodeName(), element.getTextContent());
                 }
             }

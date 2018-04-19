@@ -7,6 +7,8 @@ import com.CBpayments.wxpay.WXPayConstants.SignType;
 
 
 
+
+
 public class WXPay {
 
     private WXPayConfig config;

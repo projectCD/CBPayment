@@ -14,7 +14,10 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.CBpayments.dao.CBpayDao;
 import com.CBpayments.dao.StudnetDao;
+import com.CBpayments.model.CbCustomer;
+import com.CBpayments.model.CbTranDetails;
 import com.CBpayments.model.Student;
 import com.CBpayments.service.CBpayService;
 import com.CBpayments.wxpay.WXPayConstants;
@@ -25,6 +28,17 @@ public class CBpayServcieImp implements CBpayService {
 
 	@Autowired
 	private StudnetDao studnetDao;
+	
+	@Autowired
+	private CBpayDao cbPayDao;
+
+	public CBpayDao getCbPayDao() {
+		return cbPayDao;
+	}
+
+	public void setCbPayDao(CBpayDao cbPayDao) {
+		this.cbPayDao = cbPayDao;
+	}
 
 	private StudnetDao getDao() {
 		return studnetDao;
@@ -44,7 +58,7 @@ public class CBpayServcieImp implements CBpayService {
 	}
 
 	@Override
-	public Map<String, String> callPayComing(Map<String, String> map , String apiUrl) {
+	public Map<String, String> callPayComing(Map<String, String> map , String apiUrl , String key) {
 		// TODO Auto-generated method stub
 
 		String sing ;  //簽名
@@ -54,7 +68,7 @@ public class CBpayServcieImp implements CBpayService {
 		try {
 			
 		//取得簽名	
-		sing = WXPayUtil.generateSignature(map, WXPayConstants.WXPAY_KEY);
+		sing = WXPayUtil.generateSignature(map, key);
 		//放入map
 		map.put(WXPayConstants.FIELD_SIGN, sing);
 		System.out.println("=======================================");
@@ -116,5 +130,29 @@ public class CBpayServcieImp implements CBpayService {
 
 	return realut;
 }
+
+	@Override
+	public int insertOrUpdateCustomer(CbCustomer cbCustomer) {
+		// TODO Auto-generated method stub
+		return getCbPayDao().insertOrUpdateCustomer(cbCustomer);
+	}
+
+	@Override
+	public int insertOrUpdateTranDetail(CbTranDetails cbTranDetails) {
+		// TODO Auto-generated method stub
+		return getCbPayDao().insertOrUpdateTranDetail(cbTranDetails);
+	}
+
+	@Override
+	public List<CbCustomer> searchCustomer(CbCustomer cbCustomer) {
+		// TODO Auto-generated method stub
+		return getCbPayDao().searchCustomer(cbCustomer);
+	}
+
+	@Override
+	public List<CbTranDetails> searchTranDetail(CbTranDetails cbTranDetails) {
+		// TODO Auto-generated method stub
+		return getCbPayDao().searchTranDetail(cbTranDetails);
+	}
 
 }
