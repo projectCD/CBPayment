@@ -22,8 +22,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -65,7 +65,7 @@ public class WXPayUtil {
             }
             return data;
         } catch (Exception ex) {
-            WXPayUtil.getLogger().warn("Invalid XML, can not convert to map. Error message: {}. XML content: {}", ex.getMessage(), strXML);
+            WXPayUtil.getLogger().info("Invalid XML, can not convert to map. Error message: {}. XML content: {}" + ex.getMessage() +strXML);
             throw ex;
         }
 
@@ -278,7 +278,7 @@ public class WXPayUtil {
      * @return
      */
     public static Logger getLogger() {
-        Logger logger = LoggerFactory.getLogger("wxpay java sdk");
+        Logger logger = Logger.getLogger("wxpay java sdk");
         return logger;
     }
 
@@ -315,6 +315,16 @@ public class WXPayUtil {
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         return formatter.format(dNow);
     }
-
+    /**
+     * 生成 隨機時間， Sequence CBP+TIME
+     * @return
+     */
+    public static String generateOutNo(String detail) {
+    	String sequence = "";
+    	Date dNow = new Date();
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+		sequence = detail + formatter.format(dNow);
+        return sequence;
+    }
     
 }

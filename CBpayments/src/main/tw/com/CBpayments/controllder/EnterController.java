@@ -1,10 +1,13 @@
 package com.CBpayments.controllder;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -46,19 +49,38 @@ public class EnterController {
 	@RequestMapping(value = "/genQRCode", method = RequestMethod.POST)
 	public String genQRCode(HttpServletRequest request) {
 		Map<String, String> map = new HashMap<String, String>(); // 放xml的map
+		List tranDetailList = new ArrayList();//訂單明細
 		String errorMsg = ""; // 顯示錯誤訊息
 		String url = ""; // qrCode的url
 		String key = "";
+		
+		//檢驗參數欄位
+		errorMsg  = validateStepOne(request);
+		if(!errorMsg.isEmpty()) {
+			request.setAttribute("errorMsg", errorMsg);
+			return ControllerUtil.CONTROLLER_INPUTDATE_PAGE;
+		}
+				
 		// 找出客戶資料，取得key
-		key = this.getKeyByCostomer((String) request.getParameter("mch_id"));
-
+		key = this.getKeyByCostomer(request.getParameter("mch_id"));
+		
 		// 如果沒有客戶資料，回傳錯誤訊息
 		if ("Error".equals(key.substring(0, 5))) {
 			errorMsg = "Account is not found";
 			request.setAttribute("errorMsg", errorMsg);
 			return ControllerUtil.CONTROLLER_INPUTDATE_PAGE;
 		}
-
+		
+		// 檢核order_key是否重覆
+		CbTranDetails transDetail = new CbTranDetails();
+		transDetail.setOrderKey(request.getParameter("order_key"));
+		tranDetailList = cbPayService.searchTranDetail(transDetail);
+		if(!CollectionUtils.isEmpty(tranDetailList)) {
+			errorMsg = "order_key is exist,Please create new order_key.";
+			request.setAttribute("errorMsg", errorMsg);
+			return ControllerUtil.CONTROLLER_INPUTDATE_PAGE;
+		}
+		
 		// 組成接口請求map
 		map = this.genXmlMap(request);
 
@@ -73,6 +95,7 @@ public class EnterController {
 		} else {
 			// 儲存生成訂單資訊
 			CbTranDetails cbTranDetails = new CbTranDetails();
+			cbTranDetails.setSequence(WXPayUtil.generateOutNo("CBP") );
 			cbTranDetails.setOrderKey(request.getParameter("order_key"));// 商戶訂單主鍵值
 			cbTranDetails.setMchId(request.getParameter("mch_id"));// 商戶號碼
 			cbTranDetails.setFeeType(request.getParameter("fee_type"));// 幣別
@@ -83,6 +106,7 @@ public class EnterController {
 		}
 
 		logger.info("url :" + url);
+		logger.info("Error Msg :" + errorMsg);
 		request.setAttribute("url", url);
 		request.setAttribute("errorMsg", errorMsg);
 
@@ -96,75 +120,95 @@ public class EnterController {
 	 * @param request
 	 * @return
 	 */
+	@ResponseBody
 	@RequestMapping(value = "/searchTranStatus", method = RequestMethod.POST)
 	public String searchTranStatus(HttpServletRequest request) {
+		logger.info("searchTranStatus Start");
 		List customers = new ArrayList();// 廠商list（找廠商金鑰key）
 		List tranDetailList = new ArrayList();// 訂單明細（找出單訂號）
 		Map<String, String> map = new HashMap<String, String>(); // 放xml的map
 		String msg = ""; // 顯示錯誤訊息
 		String key = "";
 		String outTradeNo = "";// 交易訂單號
+		String xml = "";
 
-		// 取得外來參數
-		String mchId = request.getParameter("mch_id").toString();// 商戶號
-		String orderKey = request.getParameter("order_key").toString();// 廠商記錄訂單號
-
-		// 從db撈取交易訂單號
-		CbTranDetails cbTranDetails = new CbTranDetails();
-		cbTranDetails.setOrderKey(orderKey);
-		cbTranDetails.setMchId(mchId);
-		tranDetailList = cbPayService.searchTranDetail(cbTranDetails);
-		if (CollectionUtils.isEmpty(tranDetailList)) {
-			msg = "orderKey is not found";
-			request.setAttribute("errorMsg", msg);
-			return ControllerUtil.CONTROLLER_INPUTDATE_PAGE;
-		} else {
-			cbTranDetails = (CbTranDetails) tranDetailList.get(0);
-			outTradeNo = cbTranDetails.getOutTradeNo();
-		}
-
-		// 取得廠商金鑰
-		key = this.getKeyByCostomer(mchId);
-		if ("Error".equals(key.substring(0, 5))) {
-			msg = "Account is not found";
-			request.setAttribute("errorMsg", msg);
-			return ControllerUtil.CONTROLLER_INPUTDATE_PAGE;
-		}
-
-		// XML MAP 組成
-		map.put("serviceType", "WXB2C");
-		map.put("inputCharset", WXPayConstants.WXPAY_UTF8);
-		map.put("interfaceVersion", "1.0");
-		map.put("signType", WXPayConstants.MD5);
-		map.put("orderNo", outTradeNo);
-		map.put("mchtNo", mchId);
-
-		// 呼叫電文 3.1.2.6.微信扫码接口请求报文
-		Map<String, String> xmlMap = cbPayService.callPayComing(map, WXPayConstants.WXPAY_URL_3124, key);
-
-		// update 訂單資訊 及 訊息
-		cbTranDetails.setMessage(xmlMap.get("message"));
-		cbTranDetails.setStatus(xmlMap.get("status"));
-		cbTranDetails.setEditDate(Calendar.getInstance());
-		if ("0".equals(xmlMap.get("status"))) {
-			String payStatus = xmlMap.get("payStatus");
-			cbTranDetails.setPayStatus(payStatus);
-			msg = "trade query success.";
-			if ("00000".equals(payStatus)) {
-				msg = msg + "payment success";
-			} else if ("NOTPAY".equals(payStatus)) {
-				msg = msg + "payment cancel";
-			} else if ("Z0003".equals(payStatus)) {
-				msg = msg + "payment failed";
+		try {			
+			//檢驗參數欄位
+			msg  = validateStepTwo(request);
+			if(!msg.isEmpty()) {
+				return msg;
 			}
-		} else {
-			msg = "trade query failed.";
+						
+			String mchId = request.getParameter("mch_id").toString();// 商戶號
+			String orderKey = request.getParameter("order_key").toString();// 廠商記錄訂單號
+			
+			// 從db撈取交易訂單號
+			CbTranDetails cbTranDetails = new CbTranDetails();
+			cbTranDetails.setOrderKey(orderKey);
+			cbTranDetails.setMchId(mchId);
+			
+			tranDetailList = cbPayService.searchTranDetail(cbTranDetails);
+			if (CollectionUtils.isEmpty(tranDetailList)) {
+				msg = "orderKey is not found";
+				request.setAttribute("errorMsg", msg);
+				logger.info("Error Msg :" + msg);
+				return msg;
+			} else {
+				cbTranDetails = (CbTranDetails) tranDetailList.get(0);
+				outTradeNo = cbTranDetails.getOutTradeNo();
+			}
+	
+			// 取得廠商金鑰
+			key = this.getKeyByCostomer(mchId);
+			if ("Error".equals(key.substring(0, 5))) {
+				msg = "Account is not found";
+				logger.info("Error Msg :" + msg);
+				return msg;
+			}
+	
+			// XML MAP 組成
+			map.put("serviceType", "WXB2C");
+			map.put("inputCharset", WXPayConstants.WXPAY_UTF8);
+			map.put("interfaceVersion", "1.0");
+			map.put("signType", WXPayConstants.MD5);
+			map.put("orderNo", outTradeNo);
+			map.put("mchtNo", mchId);
+	
+			// 呼叫電文 3.1.2.6.微信扫码接口请求报文
+			Map<String, String> xmlMap = cbPayService.callPayComing(map, WXPayConstants.WXPAY_URL_3124, key);
+	
+			// update 訂單資訊 及 訊息
+			cbTranDetails.setMessage(xmlMap.get("message"));
+			cbTranDetails.setStatus(xmlMap.get("status"));
+			cbTranDetails.setEditDate(Calendar.getInstance());
+			if ("0".equals(xmlMap.get("status"))) {
+				String payStatus = xmlMap.get("payStatus");
+				cbTranDetails.setPayStatus(payStatus);
+				msg = "trade query success.";
+				if ("00000".equals(payStatus)) {
+					msg = msg + "payment success";
+				} else if ("NOTPAY".equals(payStatus)) {
+					msg = msg + "payment cancel";
+				} else if ("Z0003".equals(payStatus)) {
+					msg = msg + "payment failed";
+				}
+			} else {
+				msg = "trade query failed.";
+			}
+			
+			cbPayService.insertOrUpdateTranDetail(cbTranDetails);
+
+			xml = WXPayUtil.mapToXml(xmlMap);
+			request.setAttribute("xml：", xml);
+			logger.info("XML :" + xml);
+			return xml;
+		} catch (Exception e) {
+			e.printStackTrace();
+			xml ="Search System has problem.";
 		}
-
-		cbPayService.insertOrUpdateTranDetail(cbTranDetails);
 		request.setAttribute("errorMsg", msg);
-
-		return ControllerUtil.CONTROLLER_INPUTDATE_PAGE;
+		logger.info("Msg :" + msg);
+		return xml;
 	}
 
 	/**
@@ -190,6 +234,11 @@ public class EnterController {
 		String mch_id = request.getParameter("mch_id"); // 頁面參數 商戶號
 		String body = request.getParameter("body"); // 頁面參數 商品描述
 		String total_fee = request.getParameter("total_fee"); // 頁面參數 金額
+		if(isInteger(total_fee)) {
+			//為美金轉人民幣
+			Integer totalFee = (int)(Double.valueOf(total_fee) * 100);
+			total_fee = String.valueOf(totalFee);
+		}
 		String fee_type = request.getParameter("fee_type"); // 頁面參數 幣別
 		Map<String, String> map = new HashMap<String, String>();
 
@@ -214,24 +263,10 @@ public class EnterController {
 	@ResponseBody
 	@RequestMapping(value = "/search", method = RequestMethod.POST)
 	public List<Student> getSearchResultViaAjax(HttpServletRequest request) {
-
+		List list = null;
 		System.out.println("ajax !!");
 
-		List<Student> list = cbPayService.searchStudentAll();
-
-		list.forEach(e -> System.out.println(e.getSno()));
 		
-		
-		CbTranDetails cbTranDetails = new CbTranDetails();
-		cbTranDetails.setOrderKey("11221");// 商戶訂單主鍵值
-		cbTranDetails.setMchId("12121");// 商戶號碼
-		cbTranDetails.setFeeType("CNN");// 幣別
-		cbTranDetails.setAmount(10);// 金額
-		cbTranDetails.setOutTradeNo("121212112");// 交易訂單號
-		cbTranDetails.setCreateDate(Calendar.getInstance());// 建檔日期
-		cbPayService.insertOrUpdateTranDetail(cbTranDetails);
-		
-
 		return list;
 
 	}
@@ -240,14 +275,6 @@ public class EnterController {
 	public String sayHello(ModelMap model) {
 		model.addAttribute("greeting", "Hello World from Spring 4 MVC");
 		System.out.println("start welcome");
-
-		
-		 CbCustomer cbCustomer = new CbCustomer();
-		List<CbCustomer> listCustomer = cbPayService.searchCustomer(cbCustomer);
-
-		listCustomer.forEach(e -> System.out.println(e.getMchId()));
-
-		logger.info("start welcome---EnterController");
 
 		return ControllerUtil.CONTROLLER_WELCOME_PAGE;
 	}
@@ -298,5 +325,77 @@ public class EnterController {
 			key = cbCustomer.getMchKey();
 		}
 		return key;
+	}
+	
+	/**
+	 * 檢核 數字
+	 * @param request
+	 * @return
+	 */
+	public static boolean isInteger(String value) {
+	    Pattern pattern = Pattern.compile("^([-+]?\\d+)(\\.\\d+)?$");
+	    return pattern.matcher(value).matches();
+	}
+	
+	/**
+	 * 檢核  request 參數
+	 * @param request
+	 * @return
+	 */
+	public String validateStepOne(HttpServletRequest request) {
+		String msg = "";
+		// 頁面參數 商戶號
+		if(request.getParameter("mch_id") == null || 
+				request.getParameter("mch_id").isEmpty()) {
+			msg += " mch_id is Empty. ";
+		}
+		// 頁面參數 商品描述
+		if(request.getParameter("body") == null || 
+				request.getParameter("body").isEmpty()) {
+			msg += " body is Empty. ";
+		}
+		// 頁面參數 幣別
+		if(request.getParameter("fee_type") == null || 
+				request.getParameter("fee_type").isEmpty()) {
+			msg += " fee_type is Empty. ";
+		}
+		// 頁面參數 order_key
+		if(request.getParameter("order_key") == null || 
+				request.getParameter("order_key").isEmpty()) {
+			msg += " order_key is Empty. ";
+		}
+		// 頁面參數 金額
+		if(request.getParameter("total_fee") == null || 
+				request.getParameter("total_fee").isEmpty()) {
+			msg += " total_fee is Empty. ";
+		}else {
+			if(isInteger(request.getParameter("total_fee"))) {
+				if(Double.valueOf(request.getParameter("total_fee")) == 0) {
+					msg += " total_fee can't be zero. ";
+				}
+			}else {
+				msg += " total_fee must be a number. ";
+			}
+		}
+		return msg;
+	}
+	/**
+	 * 檢核  request 參數
+	 * @param request
+	 * @return
+	 */
+	public String validateStepTwo(HttpServletRequest request) {
+		String msg = "";
+		// 頁面參數 商戶號
+		if(request.getParameter("mch_id") == null || 
+				request.getParameter("mch_id").isEmpty()) {
+			msg += " mch_id is Empty. ";
+		}
+		// 頁面參數 order_key
+		if(request.getParameter("order_key") == null || 
+				request.getParameter("order_key").isEmpty()) {
+			msg += " order_key is Empty. ";
+		}
+		return msg;
 	}
 }

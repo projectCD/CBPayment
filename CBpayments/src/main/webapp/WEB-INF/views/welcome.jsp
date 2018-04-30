@@ -11,6 +11,16 @@
 <script src="<c:url value="resources/js/qrcode.js" />"></script>	
 <title>CBPay</title>
 </head>
+<script>
+function searchStatus() {
+	var mchId = $('#mch_id').val();
+	var orderKey = $('#order_key').val();
+	$.post("searchTranStatus",{mch_id:mchId,order_key:orderKey }, function(data) {
+		console.log(data);
+		});
+}
+
+</script>
 <body>
     <!-- 
    <div id="qrcodeTable"></div>
@@ -23,28 +33,47 @@
     </script>
      -->   
  
-    
-     <form action="genQRCode" method="POST">
-     <table>
-     	<tr>
-     		<td align="center">Account</td>
-     		<td><input type="text" name="mch_id" value="500581200000001"></td>
-     	</tr>
-     	<tr>
-     		<td align="center">Product description</td>
-     		<td><input type="text" name="body" value=""></td>
-     	</tr>
-     	<tr>
-     		<td align="center">Amount</td>
-     		<td><input type="text" name="total_fee" value=""></td>
-     	</tr>
-     	<tr>
-     		<td align="center">Currency</td>
-     		<td><input type="text" name="fee_type" value="USD" readonly="readonly" ></td>
-     	</tr>
-     </table>
-    <input type="submit" value="Generate QRCODE">
-    </form>
-
+   	  <div>----------  test genQRcode  -------------------------- </div>
+	     <form action="genQRCode" method="POST">
+	     <table>
+	     	<tr>
+	     		<td align="center">Account</td>
+	     		<td><input type="text" name="mch_id" value="500581200000001"></td>
+	     	</tr>
+	     	<tr>
+	     		<td align="center">Product description</td>
+	     		<td><input type="text" name="body" value=""></td>
+	     	</tr>
+	     	<tr>
+	     		<td align="center">Amount</td>
+	     		<td><input type="text" name="total_fee" value=""></td>
+	     	</tr>
+	     	<tr>
+	     		<td align="center">Currency</td>
+	     		<td><input type="text" name="fee_type" value="USD" readonly="readonly" ></td>
+	     	</tr>
+	     	<tr>
+	     		<td align="center">orderKey</td>
+	     		<td><input type="text" name="order_key" value="A12345" ></td>
+	     	</tr>
+	     </table>
+	    <input type="submit" value="Generate QRCODE">
+	    </form>
+		<br>
+		<br>
+		<div>----------  test search order status  ----------------- </div>
+		<form action="searchTranStatus" method="POST">
+	     <table>
+	     	<tr>
+	     		<td align="center">Account</td>
+	     		<td><input type="text" name="mch_id" id ="mch_id" value="500581200000001"></td>
+	     	</tr>
+	     	<tr>
+	     		<td align="center">orderKey</td>
+	     		<td><input type="text" name="order_key" id ="order_key" value="A12345"></td>
+	     	</tr>
+	     </table>
+	    <input type="button" value="search Tran Status" onclick="searchStatus();" >
+	    </form>
 </body>
 </html>
