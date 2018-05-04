@@ -15,8 +15,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.CBpayments.model.CbCustomer;
+import com.CBpayments.model.CbLog;
 import com.CBpayments.model.CbTranDetails;
-import com.sun.xml.internal.ws.util.StringUtils;
 
 @Repository
 @Transactional(rollbackFor = Exception.class)
@@ -32,6 +32,13 @@ public class CBpayDao implements Serializable {
 		return sessionFactory.getCurrentSession();
 	}
 
+	
+	/**
+	 * 新增或更新 廠商資料
+	 * 
+	 * @param cbCustomer
+	 * @return int
+	 */
 	public int insertOrUpdateCustomer(CbCustomer cbCustomer) {
 
 		int reslut = 0;
@@ -49,6 +56,13 @@ public class CBpayDao implements Serializable {
 
 	}
 
+	
+	/**
+	 * 新增或更新 付款名細
+	 * 
+	 * @param cbTranDetails
+	 * @return int
+	 */
 	public int insertOrUpdateTranDetail(CbTranDetails cbTranDetails) {
 		// TODO Auto-generated method stub
 		int reslut = 0;
@@ -65,11 +79,49 @@ public class CBpayDao implements Serializable {
 		return reslut;
 	}
 
+	
+	/**
+	 * 新增或更新 log
+	 * 
+	 * @param cbTranDetails
+	 * @return int
+	 */
+	public int insertOrUpdateLog(CbLog cbLog) {
+		// TODO Auto-generated method stub
+		int reslut = 0;
+
+		try {
+			getSession().saveOrUpdate(cbLog);
+			reslut = 1 ;
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			logger.error("CBpayDao insertOrUpdateLog---" + e);
+			e.printStackTrace();
+		}
+
+		return reslut;
+	}
+	
+	
+	/**
+	 * 查詢 廠商資料
+	 * 
+	 * @param cbCustomer
+	 * @return  List<CbCustomer> 
+	 */
 	public List<CbCustomer> searchCustomer(CbCustomer cbCustomer) {
 		// TODO Auto-generated method stub
 		return getSession().createCriteria(CbCustomer.class).add(Example.create(cbCustomer)).list();
 	}
 
+	
+	
+	/**
+	 * 查詢 付款名細
+	 * 
+	 * @param cbTranDetails
+	 * @return  List<CbTranDetails> 
+	 */
 	public List<CbTranDetails> searchTranDetail(CbTranDetails cbTranDetails) {
 		String sql = " select * from CBPayment_Tran_Details where 1 = 1 ";
 		boolean orderKey = false;
@@ -92,5 +144,6 @@ public class CBpayDao implements Serializable {
 		return query.list();
 		//return getSession().createCriteria(CbTranDetails.class).add(Example.create(cbTranDetails)).list();
 	}
+	
 
 }

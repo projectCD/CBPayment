@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.CBpayments.dao.CBpayDao;
 import com.CBpayments.dao.StudnetDao;
+import com.CBpayments.model.CbLog;
 import com.CBpayments.model.CbCustomer;
 import com.CBpayments.model.CbTranDetails;
 import com.CBpayments.model.Student;
@@ -75,9 +76,6 @@ public class CBpayServcieImp implements CBpayService {
 		
 		//產生xml格式
 		xml = WXPayUtil.mapToXml(map);
-		System.out.println(WXPayUtil.isSignatureValid(map, WXPayConstants.WXPAY_KEY));
-		System.out.println("xml " + xml);
-		System.out.println("apiUrl " + apiUrl);
 		URL httpUrl = new URL(apiUrl);
 		HttpURLConnection httpURLConnection = (HttpURLConnection) httpUrl.openConnection();
 		// httpURLConnection.setRequestProperty("Host", "api.mch.weixin.qq.com");
@@ -119,7 +117,6 @@ public class CBpayServcieImp implements CBpayService {
 			}
 		}
 
-		System.out.println(resp);
 		realut = WXPayUtil.xmlToMap(resp);
 		
 		
@@ -153,6 +150,12 @@ public class CBpayServcieImp implements CBpayService {
 	public List<CbTranDetails> searchTranDetail(CbTranDetails cbTranDetails) {
 		// TODO Auto-generated method stub
 		return getCbPayDao().searchTranDetail(cbTranDetails);
+	}
+
+	@Override
+	public int insertOrUpdateLog(CbLog cbLog) {
+		// TODO Auto-generated method stub
+		return getCbPayDao().insertOrUpdateLog(cbLog);
 	}
 
 }

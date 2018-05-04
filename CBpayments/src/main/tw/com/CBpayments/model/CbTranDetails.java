@@ -50,6 +50,8 @@ public class CbTranDetails {
 	@Column(name = "edit_date")
 	private Calendar editDate;
 
+	@Column(name = "body")
+	private String body;
 	
 	public String getSequence() {
 		return sequence;
@@ -146,4 +148,14 @@ public class CbTranDetails {
 	public void setEditDate(Calendar editDate) {
 		this.editDate = editDate;
 	}
+
+	public String getBody() {
+		return body;
+	}
+
+	public void setBody(String body) {
+		this.body = body;
+	}
+	
+	
 }
